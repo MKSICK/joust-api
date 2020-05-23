@@ -6,8 +6,14 @@ UNLOCK TABLES;
 -- Joustes
 INSERT INTO `joustes` (`type`, `name`, `description`, `created_by`,
 `location`, `date_start`, `date_end`, `status`) 
-VALUES ('0', 'Test Name', 'Test Description', 1, 
+VALUES ('0', 'Test Circle', 'Test Description', 1, 
 'Test Location', '2020-08-01 19:00:00', '2020-08-03 19:00:00', 0);
+
+
+INSERT INTO `joustes` (`type`, `name`, `description`, `created_by`,
+`location`, `date_start`, `date_end`, `status`) 
+VALUES ('1', 'Test Olympic', 'Test Description', 1, 
+'Test Location', '2020-09-01 19:00:00', '2020-09-03 19:00:00', 0);
 
 -- Users
 INSERT INTO `users` (`type`, `name`, `password`) VALUES (0, 'root', 'root');
@@ -32,6 +38,11 @@ INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (7, 1);
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (8, 1);
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (9, 1);
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (10, 1);
+
+INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (3, 2);
+INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (4, 2);
+INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (5, 2);
+INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (6, 2);
 
 -- Competitions
 INSERT INTO `competitions` (`joust_id`,`member1`, `member2`, `status`, `stage`) 

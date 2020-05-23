@@ -20,6 +20,10 @@ router.post('/joust/add', jsonParser, addJoust);
 router.post('/joust/remove', jsonParser, removeJoust);
 router.get('/joust/start', jsonParser, startJoust);
 
+router.get('/competitions/get/', getCompetition);
+router.get('/competitions/getall', getCompetitions);
+router.post('/competitions/update', jsonParser, updateCompetition);
+
 async function ping(req, res)
 {
     console.log(req.query);
@@ -30,15 +34,16 @@ async function ping(req, res)
 async function getJoust(req,res)
 {
     let result = [];
+    let comps = [];
     const connection = sql_helper.createConnection();
     if(!req.query || req.query.id === undefined)
         res.status(404).json({message: 'Not found!'});
     let inserts = [req.query.id];
     result = await sql_helper.promiseSQL(connection, 'select * from joustes where id = ?', inserts);
+    comps = await sql_helper.promiseSQL(connection, 'select * from competitions where joust_id = ?', inserts);
     connection.end;
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
-    res.status(200).json({joustes: result});
+    result[0].copmetitions = comps;
+    res.status(200).json({joust: result[0]});
 }
 
 async function getJoustes(req,res)
@@ -82,48 +87,91 @@ async function removeJoust(req,res)
 
 async function startJoust(req,res)
 {
+    let res_message = "";
     const connection = sql_helper.createConnection();
     let inserts = [req.query.id];
-    result = await sql_helper.promiseSQL(connection, 'select user_id from attendees where joust_id = ?', inserts);
-
+    let joust_service_info = await sql_helper.promiseSQL(connection, 'select type, status from joustes where id = ?', inserts);
+    let attendees = await sql_helper.promiseSQL(connection, 'select user_id from attendees where joust_id = ?', inserts);
+    if(joust_service_info[0].status == 0)
+    {
+        let type = "";
+        let success = false;
+        switch(joust_service_info[0].type)
+        {
+            case 0:
+                console.log("Create circle");
+                type = "circle";
+                success = await createCircle(connection, attendees, req.query.id);
+                break;
+            case 1:
+                console.log("Create olympic");
+                type = "olympic";
+                success = await createOlympic(connection, attendees, req.query.id);
+                break;
+        }
+        if(success)
+        {
+            //await sql_helper.promiseSQL(connection, 'update joustes set status = 1 where id = ?', inserts);
+            res_message = "Successfully created " + type + " system!";
+        }
+        else
+        {
+            res_message = "Error with start!";
+        }
+    }
+    else
+    {
+        res_message = "Joust is started already!"
+    }
     connection.end;
-    res.status(200).json({message: "Successfully removed"});
+    res.status(200).json({message: res_message});
 }
 //#endregion
 
 //#region Competitions
-async function getThemes(req,res)
+
+async function getCompetition(req,res)
+{
+    let result = [];
+    let comps = [];
+    const connection = sql_helper.createConnection();
+    if(!req.query || req.query.id === undefined)
+        res.status(404).json({message: 'Not found!'});
+    let inserts = [req.query.id];
+    result = await sql_helper.promiseSQL(connection, 'select * from competitions where id = ?', inserts);
+    connection.end;
+    res.status(200).json({copmetition: result[0]});
+}
+
+async function getCompetitions(req,res)
 {
     let result = [];
     const connection = sql_helper.createConnection();
-    let inserts = [req.body.category_id]
-    result = await sql_helper.promiseSQL(connection, 'select t.id, t.name, t.description from themes t inner join themes_to_categories ttc on ttc.theme_id = t.id AND ttc.uc_id = ?', inserts);
+    if(!req.query || req.query.id === undefined)
+        res.status(404).json({message: 'Not found!'});
+    let inserts = [req.query.id];
+    result = await sql_helper.promiseSQL(connection, 'select * from competitions where joust_id = ?', inserts);
     connection.end;
-    res.status(200).json({user_categories: result});
+    res.status(200).json({copmetitions: result});
 }
 
-async function addTheme(req,res)
+async function updateCompetition(req,res)
 {
+    let result = [];
+    let comps = [];
     const connection = sql_helper.createConnection();
-
-    let inserts = [req.body.name, req.body.description];
-    result = await sql_helper.promiseSQL(connection, 'insert into themes (name, description) values (?,?)', inserts);
-    
-    inserts = [req.body.category_id, result.insertId];
-    result = await sql_helper.promiseSQL(connection, 'insert into themes_to_categories (uc_id, theme_id) values (?,?)', inserts);
-    
+    let inserts = [
+        req.body.description,
+        req.body.date_start,
+        req.body.date_end,
+        req.body.status,
+        req.body.id
+    ];
+    result = await sql_helper.promiseSQL(connection, 'update competitions set description = ?, date_start = ?, date_end = ?, status = ? where id = ?', inserts);
     connection.end;
-    res.status(200).json({message: "Successfully added"});
+    res.status(200).json({message: "Successfully updated!"});
 }
 
-async function removeTheme(req,res)
-{
-    const connection = sql_helper.createConnection();
-    let inserts = [req.body.theme_id];
-    result = await sql_helper.promiseSQL(connection, 'delete from themes where id = ?', inserts);
-    connection.end;
-    res.status(200).json({message: "Successfully removed"});
-}
 //#endregion
 
 
@@ -135,20 +183,50 @@ async function removeTheme(req,res)
 
 //#region Non API
 
-async function createOlympic(attendees, joust_id)
+async function createOlympic(connection, attendees, joust_id)
 {
     let power = Math.log2(attendees.length);
-    if(power === Math.round(power))
+    let first_stage = true;
+    if(power === Math.round(power) && power > 0)
     {
-        while(power > 1)
+        while(power > 0)
         {
-            for(let i = 0; i < (power ** 2) - 1; i+=2)
+            for(let i = 0; i < (2 ** power) - 1; i+=2)
             {
-                let insert = [];
-                await sql_helper.promiseSQL(connection, 'insert into', []);
+                if(first_stage)
+                {
+                    let inserts = [joust_id, attendees[i].user_id, attendees[i+1].user_id, 0, power];
+                    await sql_helper.promiseSQL(connection, 'insert into competitions (joust_id, member1, member2, status, stage) values (?,?,?,?,?)', inserts);
+                }
+                else
+                {
+                    let inserts = [joust_id, 0, power];
+                    await sql_helper.promiseSQL(connection, 'insert into competitions (joust_id, status, stage) values (?,?,?)', inserts);
+                }
             }
-        }        
+            first_stage = false;
+            power--;
+        }
+        return true;        
     }
+    else
+    {
+        return false;
+    }
+}
+
+async function createCircle(connection, attendees, joust_id)
+{
+    let count = attendees.length;
+    for (let i = 0; i < count; i++)
+    {
+        for (let j = i+1; j < count; j++)
+        {
+            let inserts = [joust_id, attendees[i].user_id, attendees[j].user_id, 0, 1];
+            await sql_helper.promiseSQL(connection, 'insert into competitions (joust_id, member1, member2, status, stage) values (?,?,?,?,?)', inserts);
+        }
+    }
+    return true;
 }
 
 //#endregion
