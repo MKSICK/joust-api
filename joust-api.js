@@ -36,6 +36,8 @@ async function getJoust(req,res)
     let inserts = [req.query.id];
     result = await sql_helper.promiseSQL(connection, 'select * from joustes where id = ?', inserts);
     connection.end;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
     res.status(200).json({joustes: result});
 }
 
