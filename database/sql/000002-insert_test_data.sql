@@ -43,13 +43,3 @@ INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (3, 2);
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (4, 2);
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (5, 2);
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (6, 2);
-
--- Competitions
-INSERT INTO `competitions` (`joust_id`,`member1`, `member2`, `status`, `stage`) 
-VALUES (1, 3, 4, 0, 0);
-INSERT INTO `competitions` (`joust_id`,`member1`, `member2`, `status`, `stage`) 
-VALUES (1, 5, 6, 0, 0);
-INSERT INTO `competitions` (`joust_id`,`member1`, `member2`, `status`, `stage`) 
-VALUES (1, 7, 8, 0, 0);
-INSERT INTO `competitions` (`joust_id`,`member1`, `member2`, `status`, `stage`) 
-VALUES (1, 9, 10, 0, 0);

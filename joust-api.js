@@ -18,11 +18,14 @@ router.get('/joust/getall', getJoustes);
 router.get('/joust/get/', getJoust);
 router.post('/joust/add', jsonParser, addJoust);
 router.post('/joust/remove', jsonParser, removeJoust);
+router.post('/joust/attend', jsonParser, attendOnJoust);
+router.get('/joust/attendees', getAttendees);
 router.get('/joust/start', jsonParser, startJoust);
 
 router.get('/competitions/get/', getCompetition);
 router.get('/competitions/getall', getCompetitions);
 router.post('/competitions/update', jsonParser, updateCompetition);
+router.post('/competitions/win', jsonParser, setWinner);
 
 async function ping(req, res)
 {
@@ -40,7 +43,13 @@ async function getJoust(req,res)
         res.status(404).json({message: 'Not found!'});
     let inserts = [req.query.id];
     result = await sql_helper.promiseSQL(connection, 'select * from joustes where id = ?', inserts);
-    comps = await sql_helper.promiseSQL(connection, 'select * from competitions where joust_id = ?', inserts);
+    comps = await sql_helper.promiseSQL(connection, 
+        `select c.*, m1.name as m1_name, m2.name as m2_name, w.name as winner_name 
+        from competitions c 
+        left join users m1 on m1.id = c.member1 
+        left join users m2 on m2.id = c.member2 
+        left join users w on w.id = c.winner 
+        where joust_id = ?`, inserts);
     connection.end;
     result[0].copmetitions = comps;
     res.status(200).json({joust: result[0]});
@@ -83,6 +92,31 @@ async function removeJoust(req,res)
     result = await sql_helper.promiseSQL(connection, 'delete from joustes where id = ?', inserts);
     connection.end;
     res.status(200).json({message: "Successfully removed"});
+}
+
+async function attendOnJoust(req,res)
+{
+    let result = [];
+    let inserts = [  
+        req.body.user_id,
+        req.body.joust_id
+    ];
+    const connection = sql_helper.createConnection();
+    result = await sql_helper.promiseSQL(connection, 'insert into attendees (user_id, joust_id) values (?, ?)', inserts);
+    connection.end;
+    res.status(200).json({message: "Successfully registered on joust!"});
+}
+
+async function getAttendees(req,res)
+{
+    let result = [];
+    if(!req.query || req.query.id === undefined)
+        res.status(404).json({message: 'Not found!'});
+    let inserts = [req.query.id];
+    const connection = sql_helper.createConnection();
+    result = await sql_helper.promiseSQL(connection, 'select * from attendees where joust_id = ?', inserts);
+    connection.end;
+    res.status(200).json({attendees: result});
 }
 
 async function startJoust(req,res)
@@ -170,6 +204,62 @@ async function updateCompetition(req,res)
     result = await sql_helper.promiseSQL(connection, 'update competitions set description = ?, date_start = ?, date_end = ?, status = ? where id = ?', inserts);
     connection.end;
     res.status(200).json({message: "Successfully updated!"});
+}
+
+async function setWinner(req,res)
+{
+    let result = [];
+    let comps = [];
+    const connection = sql_helper.createConnection();
+    let inserts = [
+        req.body.winner_id,
+        2,
+        req.body.competition_id,
+        req.body.joust_id
+    ];
+    result = await sql_helper.promiseSQL(connection, 'update competitions set winner = ?, status = ? where id = ?', inserts);
+    inserts = [
+        req.body.winner_id,
+        req.body.joust_id
+    ];
+    await sql_helper.promiseSQL(connection, 'update attendees set score = score + 1 where user_id = ? and joust_id = ?', inserts);
+    
+    inserts = [
+        req.body.joust_id
+    ];
+    let joust_service_info = await sql_helper.promiseSQL(connection, 'select type, status from joustes where id = ?', inserts);
+    let type = joust_service_info[0].type;
+
+    switch(type)
+    {
+        case 1:
+            
+            result = await sql_helper.promiseSQL(connection, 'select id, member1, member2 from competitions where member1 is null or member2 is null and joust_id = ?', inserts);
+            
+            let mes = 42;
+            if(result.length > 0)
+            {
+                inserts = [
+                    req.body.winner_id,
+                    result[0].id
+                ];
+                if(result[0].member1 === null)
+                {
+                    await sql_helper.promiseSQL(connection, 'update competitions set member1 = ? where id = ?', inserts);
+                }
+                else
+                {
+                    if(result[0].member2 === null)
+                    {
+                        await sql_helper.promiseSQL(connection, 'update competitions set member2 = ? where id = ?', inserts);
+                    }
+                }
+            }
+            break;
+    }
+
+    connection.end;
+    res.status(200).json({message: "Successfully updated! Set winner " + req.body.winner_id + " for competition " + req.body.competition_id});
 }
 
 //#endregion

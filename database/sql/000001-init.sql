@@ -48,7 +48,7 @@ CREATE TABLE `users` (
 CREATE TABLE `attendees` (
     `user_id` int(10) unsigned NOT NULL,
     `joust_id` int(10) unsigned NOT NULL,
-    `score` int(10),
+    `score` int(10) DEFAULT 0,
     PRIMARY KEY (`user_id`, `joust_id`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`joust_id`) REFERENCES `joustes` (`id`) ON DELETE CASCADE
