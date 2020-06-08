@@ -267,7 +267,6 @@ async function setWinner(req,res)
 
 //#endregion
 
-
 //#region Users
 
 async function createUser(req, res)
@@ -314,6 +313,7 @@ async function authUser(req, res)
         {
             endMessage = "Добро пожаловать, " + result[0].name + "!";
             user.id = result[0].id;
+            user.name = result[0].name;
             user.type = result[0].type;
             user.role = result[0].role;
             code = 200;
