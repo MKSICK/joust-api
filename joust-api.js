@@ -45,7 +45,7 @@ async function getJoust(req,res)
     if(!req.query || req.query.id === undefined)
         res.status(404).json({message: 'Not found!'});
     let inserts = [req.query.id];
-    result = await sql_helper.promiseSQL(connection, 'select * from joustes where id = ?', inserts);
+    result = await sql_helper.promiseSQL(connection, 'select j.*, u.name as winner_name from joustes j left join users u on u.id = j.winner where j.id = ?', inserts);
     comps = await sql_helper.promiseSQL(connection, 
         `select c.*, m1.name as m1_name, m2.name as m2_name, w.name as winner_name 
         from competitions c 
@@ -53,8 +53,17 @@ async function getJoust(req,res)
         left join users m2 on m2.id = c.member2 
         left join users w on w.id = c.winner 
         where joust_id = ?`, inserts);
+    attendees = await sql_helper.promiseSQL(connection, 
+        `select 
+        a.user_id, 
+        u.name, 
+        a.score 
+        from attendees a 
+        left join users u on u.id = a.user_id  
+        where joust_id = ?`, inserts);
     connection.end;
     result[0].copmetitions = comps;
+    result[0].attendees = attendees;
     res.status(200).json({joust: result[0]});
 }
 
@@ -62,7 +71,7 @@ async function getJoustes(req,res)
 {
     let result = [];
     const connection = sql_helper.createConnection();
-    result = await sql_helper.promiseSQL(connection, 'select * from joustes', []);
+    result = await sql_helper.promiseSQL(connection, 'select j.*, u.name as winner_name from joustes j left join users u on u.id = j.winner', []);
     connection.end;
     res.status(200).json({joustes: result});
 }
