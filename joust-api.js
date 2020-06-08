@@ -27,6 +27,9 @@ router.get('/competitions/getall', getCompetitions);
 router.post('/competitions/update', jsonParser, updateCompetition);
 router.post('/competitions/win', jsonParser, setWinner);
 
+router.post('/user/create', jsonParser, createUser);
+router.post('/user/auth', jsonParser, authUser);
+
 async function ping(req, res)
 {
     console.log(req.query);
@@ -267,6 +270,69 @@ async function setWinner(req,res)
 
 //#region Users
 
+async function createUser(req, res)
+{
+    const connection = sql_helper.createConnection();
+
+    let inserts = [
+        req.body.name,
+        req.body.login,
+        req.body.password,
+        req.body.type || 2
+    ]
+
+    let result = await sql_helper.promiseSQL(connection,
+        `insert into users (name, login, password, type)
+        values (?,?,?,?)`,
+        inserts);
+    
+    connection.end;
+    let endMessage = 'Пользователь ' + req.body.name + " зарегистрирован!";
+    let user = {};
+    user.id = result.insertId;
+    res.status(200).json({message: endMessage, user: user});
+}
+
+async function authUser(req, res)
+{
+    const connection = sql_helper.createConnection();
+
+    let inserts = [
+        req.body.login
+    ]
+
+    let result = await sql_helper.promiseSQL(connection,
+        `select id, name, password from users where login = ?`,
+        inserts);
+    
+    let endMessage = "Неизвестная ошибка!";
+    let code = 200;
+    let user = {};
+    if(result.length > 0)
+    {
+        if(result[0].password === req.body.password)
+        {
+            endMessage = "Добро пожаловать, " + result[0].name + "!";
+            user.id = result[0].id;
+            user.type = result[0].type;
+            user.role = result[0].role;
+            code = 200;
+        }
+        else
+        {
+            endMessage = "Неверный логин или пароль!";
+            code = 400;
+        }
+    }
+    else
+    {
+        endMessage = "Пользователь не найден!";
+        code = 404;
+    }
+
+    connection.end;
+    res.status(code).json({message: endMessage, user: user});
+}
 
 
 //#endregion

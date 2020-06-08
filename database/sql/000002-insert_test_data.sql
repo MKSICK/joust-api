@@ -16,18 +16,18 @@ VALUES ('1', 'Test Olympic', 'Test Description', 1,
 'Test Location', '2020-09-01 19:00:00', '2020-09-03 19:00:00', 0);
 
 -- Users
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (0, 'root', 'root');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (0, 'root', 'root', 'root');
 
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (1, 'admin', 'admin');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (1, 'admin', 'admin', 'admin');
 
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee1', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee2', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee3', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee4', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee5', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee6', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee7', 'pass');
-INSERT INTO `users` (`type`, `name`, `password`) VALUES (2, 'attendee8', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee1', 'attendee1', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee2', 'attendee2', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee3', 'attendee3', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee4', 'attendee4', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee5', 'attendee5', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee6', 'attendee6', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee7', 'attendee7', 'pass');
+INSERT INTO `users` (`type`, `login`, `name`, `password`) VALUES (2, 'attendee8', 'attendee8', 'pass');
 
 -- Attendees
 INSERT INTO `attendees` (`user_id`, `joust_id`) VALUES (3, 1);

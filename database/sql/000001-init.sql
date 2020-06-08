@@ -40,6 +40,7 @@ CREATE TABLE `competitions` (
 CREATE TABLE `users` (
     `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
     `type` int(10) unsigned,
+    `login` varchar(256) NOT NULL,
     `name` varchar(256) NOT NULL,
     `password` varchar(256) NOT NULL,
     PRIMARY KEY (`id`)
