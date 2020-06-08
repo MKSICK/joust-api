@@ -16,7 +16,23 @@ mysql_query(){
     fi
 }
 
+mysql_create_db(){
+    echo "create database IF NOT EXISTS $DB_DATABASE" | mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST 1>&1
+    echo
+    if [ $? -eq 0 ]; then
+        echo Database \'$DB_DATABASE\' created or already exists!
+    else
+        echo Error occured creating database $DB_DATABASE!
+        exit 1
+    fi
+    echo 
+}
+
 cd sql
+
+echo 'Trying to create database'
+mysql_create_db
+
 for entry in "."/*
 do
     FILENAME=$( echo $entry | cut -c3- )
