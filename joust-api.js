@@ -2,6 +2,7 @@ const express = require('express');
 const router = require('express-promise-router')();
 const mysql = require('mysql');
 const dotenv = require('dotenv');
+const cors = require('cors')
 dotenv.config();
 
 const bodyParser = require("body-parser")
@@ -10,7 +11,7 @@ const sql_helper = require('./helpers/sql-helper');
 
 const app = express();
 
-app.use('/', router);
+app.use('/', cors(), router);
 
 router.get('/ping', ping);
 
